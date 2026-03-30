@@ -216,16 +216,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <div class="preset-grid" id="preset-grid"></div>
       </div>
 
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="scan-btn" style="flex:1;margin:0" onclick="toggleSearch()">
-          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="4" height="12" rx="1"/><rect x="7" y="6" width="2" height="12" rx=".5"/><rect x="10" y="6" width="4" height="12" rx=".5"/><rect x="15" y="6" width="2" height="12" rx=".5"/><rect x="18" y="6" width="4" height="12" rx="1"/></svg>
-          Search / scan
-        </button>
-        <button class="scan-btn" style="flex:1;margin:0" onclick="toggleCustom()">
-          <svg viewBox="0 0 24 24" style="stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Custom entry
-        </button>
-      </div>
+      <button class="scan-btn" onclick="toggleSearch()">
+        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="4" height="12" rx="1"/><rect x="7" y="6" width="2" height="12" rx=".5"/><rect x="10" y="6" width="4" height="12" rx=".5"/><rect x="15" y="6" width="2" height="12" rx=".5"/><rect x="18" y="6" width="4" height="12" rx="1"/></svg>
+        Scan barcode or search food
+      </button>
 
       <div class="search-panel" id="search-panel">
         <div class="search-row">
@@ -234,37 +228,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         </div>
         <div class="scan-status" id="scan-status" style="display:none"></div>
         <div class="results-list" id="results-list"></div>
-      </div>
-
-      <div class="qty-panel" id="custom-panel" style="display:none">
-        <div class="qty-title">Custom entry</div>
-        <input class="text-input" id="custom-name" placeholder="Food name" style="width:100%;margin-bottom:10px"/>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Calories</div>
-            <input class="qty-input" type="number" id="custom-kcal" placeholder="0" style="width:100%"/>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Serving (g)</div>
-            <input class="qty-input" type="number" id="custom-serving" placeholder="100" style="width:100%"/>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Protein (g)</div>
-            <input class="qty-input" type="number" id="custom-p" placeholder="0" style="width:100%"/>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Carbs (g)</div>
-            <input class="qty-input" type="number" id="custom-c" placeholder="0" style="width:100%"/>
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Fat (g)</div>
-            <input class="qty-input" type="number" id="custom-f" placeholder="0" style="width:100%"/>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" style="flex:1;padding:11px" onclick="addCustomToLog()">Add to log</button>
-          <button class="btn btn-secondary" style="padding:11px 14px" onclick="saveCustomFood()">Save food</button>
-        </div>
       </div>
 
       <div class="qty-panel" id="qty-panel">
@@ -530,49 +493,6 @@ function removeEntry(id){
   save();renderLog();
 }
 
-function toggleCustom(){
-  const p=document.getElementById('custom-panel');
-  const open=p.style.display==='none'||p.style.display==='';
-  p.style.display=open?'block':'none';
-  document.getElementById('search-panel').classList.remove('open');
-  document.getElementById('qty-panel').classList.remove('open');
-  if(open) setTimeout(()=>document.getElementById('custom-name').focus(),80);
-}
-
-function addCustomToLog(){
-  const name=document.getElementById('custom-name').value.trim();
-  if(!name){toast('Enter a food name');return;}
-  const kcal=parseFloat(document.getElementById('custom-kcal').value)||0;
-  const serving=parseFloat(document.getElementById('custom-serving').value)||100;
-  const p=parseFloat(document.getElementById('custom-p').value)||0;
-  const c=parseFloat(document.getElementById('custom-c').value)||0;
-  const f=parseFloat(document.getElementById('custom-f').value)||0;
-  const entry={id:'e'+Date.now(),name,qty:serving,unit:'g',kcal:Math.round(kcal),p:Math.round(p),c:Math.round(c),f:Math.round(f)};
-  getLog(state.currentDay).push(entry);
-  document.getElementById('custom-panel').style.display='none';
-  clearCustomForm();
-  save();renderLog();toast('Added: '+name);
-}
-
-function saveCustomFood(){
-  const name=document.getElementById('custom-name').value.trim();
-  if(!name){toast('Enter a food name');return;}
-  const kcal=parseFloat(document.getElementById('custom-kcal').value)||0;
-  const serving=parseFloat(document.getElementById('custom-serving').value)||100;
-  const p=parseFloat(document.getElementById('custom-p').value)||0;
-  const c=parseFloat(document.getElementById('custom-c').value)||0;
-  const f=parseFloat(document.getElementById('custom-f').value)||0;
-  if(!state.customFoods) state.customFoods=[];
-  state.customFoods.push({id:'cf'+Date.now(),name,sub:'Custom food · per '+serving+'g',kcal,p,c,f,per:serving});
-  save();toast('Saved to your foods: '+name);
-  clearCustomForm();
-  document.getElementById('custom-panel').style.display='none';
-}
-
-function clearCustomForm(){
-  ['custom-name','custom-kcal','custom-serving','custom-p','custom-c','custom-f'].forEach(id=>{document.getElementById(id).value='';});
-}
-
 // ─── SEARCH ───────────────────────────────────────────────
 function toggleSearch(){
   const p=document.getElementById('search-panel');
@@ -604,14 +524,13 @@ async function doSearch(){
   }
 
   const lq=q.toLowerCase();
-  const customMatches=(state.customFoods||[]).filter(f=>f.name.toLowerCase().includes(lq));
   const localMatches=LOCAL_FOODS.filter(f=>f.name.toLowerCase().includes(lq)||f.sub.toLowerCase().includes(lq));
   const recipeMatches=state.recipes.filter(r=>r.name.toLowerCase().includes(lq));
 
-  if(customMatches.length||localMatches.length||recipeMatches.length){
+  if(localMatches.length||recipeMatches.length){
     status.style.display='none';
     const recFoods=recipeMatches.map(r=>({id:'recipe_'+r.id,name:r.name,sub:'Recipe · '+r.servings+' serving'+(r.servings>1?'s':''),kcal:Math.round(r.kcal/r.servings),p:Math.round(r.p/r.servings),c:Math.round(r.c/r.servings),f:Math.round(r.f/r.servings),per:1,unit:'serving'}));
-    list.innerHTML=[...recFoods,...customMatches,...localMatches].map(makeResultItem).join('');
+    list.innerHTML=[...recFoods,...localMatches].map(makeResultItem).join('');
     return;
   }
 
@@ -903,4 +822,3 @@ renderSettings();
 </script>
 </body>
 </html>
-
