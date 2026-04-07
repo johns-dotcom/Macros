@@ -352,9 +352,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <div class="section-label" style="margin-bottom:4px">Daily goals</div>
         <div id="goals-form">
           <div class="goal-row"><div><div class="goal-label">Calories</div><div class="goal-sub">kcal/day</div></div><input class="goal-input" type="number" id="g-kcal" oninput="calcMacrosFromPct()"/></div>
-          <div class="goal-row"><div><div class="goal-label">Protein %</div><div class="goal-sub" id="g-p-grams">0g/day</div></div><input class="goal-input" type="number" id="g-p-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
-          <div class="goal-row"><div><div class="goal-label">Fat %</div><div class="goal-sub" id="g-f-grams">0g/day</div></div><input class="goal-input" type="number" id="g-f-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
-          <div class="goal-row"><div><div class="goal-label">Carbs %</div><div class="goal-sub" id="g-c-grams">0g/day</div></div><input class="goal-input" type="number" id="g-c-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
+          <div class="goal-row"><div><div class="goal-label">Protein %</div><div class="goal-sub" id="g-p-grams">0g/day</div></div><input class="goal-input" type="number" id="g-p-pct" min="0" max="100" oninput="calcMacrosFromPct('p')"/></div>
+          <div class="goal-row"><div><div class="goal-label">Fat %</div><div class="goal-sub" id="g-f-grams">0g/day</div></div><input class="goal-input" type="number" id="g-f-pct" min="0" max="100" oninput="calcMacrosFromPct('f')"/></div>
+          <div class="goal-row"><div><div class="goal-label">Carbs %</div><div class="goal-sub" id="g-c-grams">0g/day</div></div><input class="goal-input" type="number" id="g-c-pct" min="0" max="100" oninput="calcMacrosFromPct('c')"/></div>
         </div>
         <div id="pct-warning" style="font-size:12px;color:var(--red);margin-top:8px;display:none">Percentages don't add up to 100%</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveGoals()">Save goals</button>
@@ -827,11 +827,18 @@ function renderPresets(){
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────
-function calcMacrosFromPct(){
+function calcMacrosFromPct(edited){
   const kcal=parseInt(document.getElementById('g-kcal').value)||0;
-  const pPct=parseInt(document.getElementById('g-p-pct').value)||0;
-  const fPct=parseInt(document.getElementById('g-f-pct').value)||0;
-  const cPct=parseInt(document.getElementById('g-c-pct').value)||0;
+  let pPct=parseInt(document.getElementById('g-p-pct').value)||0;
+  let fPct=parseInt(document.getElementById('g-f-pct').value)||0;
+  let cPct=parseInt(document.getElementById('g-c-pct').value)||0;
+  if(edited==='p'||edited==='f'){
+    cPct=Math.max(0,100-pPct-fPct);
+    document.getElementById('g-c-pct').value=cPct;
+  } else if(edited==='c'){
+    fPct=Math.max(0,100-pPct-cPct);
+    document.getElementById('g-f-pct').value=fPct;
+  }
   const pG=Math.round(kcal*pPct/100/4);
   const fG=Math.round(kcal*fPct/100/9);
   const cG=Math.round(kcal*cPct/100/4);
