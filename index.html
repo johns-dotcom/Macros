@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Macro Tracker</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/Macros/manifest.json">
 <meta name="theme-color" content="#185FA5">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -216,10 +216,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         <div class="preset-grid" id="preset-grid"></div>
       </div>
 
-      <button class="scan-btn" onclick="toggleSearch()">
-        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="4" height="12" rx="1"/><rect x="7" y="6" width="2" height="12" rx=".5"/><rect x="10" y="6" width="4" height="12" rx=".5"/><rect x="15" y="6" width="2" height="12" rx=".5"/><rect x="18" y="6" width="4" height="12" rx="1"/></svg>
-        Scan barcode or search food
-      </button>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="scan-btn" style="flex:1;margin:0" onclick="toggleSearch()">
+          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="4" height="12" rx="1"/><rect x="7" y="6" width="2" height="12" rx=".5"/><rect x="10" y="6" width="4" height="12" rx=".5"/><rect x="15" y="6" width="2" height="12" rx=".5"/><rect x="18" y="6" width="4" height="12" rx="1"/></svg>
+          Search / scan
+        </button>
+        <button class="scan-btn" style="flex:1;margin:0" onclick="toggleCustom()">
+          <svg viewBox="0 0 24 24" style="stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Custom entry
+        </button>
+      </div>
 
       <div class="search-panel" id="search-panel">
         <div class="search-row">
@@ -228,6 +234,37 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
         </div>
         <div class="scan-status" id="scan-status" style="display:none"></div>
         <div class="results-list" id="results-list"></div>
+      </div>
+
+      <div class="qty-panel" id="custom-panel" style="display:none">
+        <div class="qty-title">Custom entry</div>
+        <input class="text-input" id="custom-name" placeholder="Food name" style="width:100%;margin-bottom:10px"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Calories</div>
+            <input class="qty-input" type="number" id="custom-kcal" placeholder="0" style="width:100%"/>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Serving (g)</div>
+            <input class="qty-input" type="number" id="custom-serving" placeholder="100" style="width:100%"/>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Protein (g)</div>
+            <input class="qty-input" type="number" id="custom-p" placeholder="0" style="width:100%"/>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Carbs (g)</div>
+            <input class="qty-input" type="number" id="custom-c" placeholder="0" style="width:100%"/>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Fat (g)</div>
+            <input class="qty-input" type="number" id="custom-f" placeholder="0" style="width:100%"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1;padding:11px" onclick="addCustomToLog()">Add to log</button>
+          <button class="btn btn-secondary" style="padding:11px 14px" onclick="saveCustomFood()">Save food</button>
+        </div>
       </div>
 
       <div class="qty-panel" id="qty-panel">
@@ -314,11 +351,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <div class="card">
         <div class="section-label" style="margin-bottom:4px">Daily goals</div>
         <div id="goals-form">
-          <div class="goal-row"><div><div class="goal-label">Calories</div><div class="goal-sub">kcal/day</div></div><input class="goal-input" type="number" id="g-kcal"/></div>
-          <div class="goal-row"><div><div class="goal-label">Protein</div><div class="goal-sub">grams/day</div></div><input class="goal-input" type="number" id="g-p"/></div>
-          <div class="goal-row"><div><div class="goal-label">Carbs</div><div class="goal-sub">grams/day</div></div><input class="goal-input" type="number" id="g-c"/></div>
-          <div class="goal-row"><div><div class="goal-label">Fat</div><div class="goal-sub">grams/day</div></div><input class="goal-input" type="number" id="g-f"/></div>
+          <div class="goal-row"><div><div class="goal-label">Calories</div><div class="goal-sub">kcal/day</div></div><input class="goal-input" type="number" id="g-kcal" oninput="calcMacrosFromPct()"/></div>
+          <div class="goal-row"><div><div class="goal-label">Protein %</div><div class="goal-sub" id="g-p-grams">0g/day</div></div><input class="goal-input" type="number" id="g-p-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
+          <div class="goal-row"><div><div class="goal-label">Fat %</div><div class="goal-sub" id="g-f-grams">0g/day</div></div><input class="goal-input" type="number" id="g-f-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
+          <div class="goal-row"><div><div class="goal-label">Carbs %</div><div class="goal-sub" id="g-c-grams">0g/day</div></div><input class="goal-input" type="number" id="g-c-pct" disabled style="opacity:.6"/></div>
         </div>
+        <div id="pct-warning" style="font-size:12px;color:var(--red);margin-top:8px;display:none">Protein % + Fat % must not exceed 100%</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveGoals()">Save goals</button>
       </div>
 
@@ -386,7 +424,7 @@ const LOCAL_FOODS = [
 ];
 
 let state = {
-  goals: {kcal:2400,p:180,c:240,f:80},
+  goals: {kcal:2400,p:180,c:240,f:80,pPct:30,fPct:30},
   logs: {},
   recipes: [],
   presets: [],
@@ -493,6 +531,49 @@ function removeEntry(id){
   save();renderLog();
 }
 
+function toggleCustom(){
+  const p=document.getElementById('custom-panel');
+  const open=p.style.display==='none'||p.style.display==='';
+  p.style.display=open?'block':'none';
+  document.getElementById('search-panel').classList.remove('open');
+  document.getElementById('qty-panel').classList.remove('open');
+  if(open) setTimeout(()=>document.getElementById('custom-name').focus(),80);
+}
+
+function addCustomToLog(){
+  const name=document.getElementById('custom-name').value.trim();
+  if(!name){toast('Enter a food name');return;}
+  const kcal=parseFloat(document.getElementById('custom-kcal').value)||0;
+  const serving=parseFloat(document.getElementById('custom-serving').value)||100;
+  const p=parseFloat(document.getElementById('custom-p').value)||0;
+  const c=parseFloat(document.getElementById('custom-c').value)||0;
+  const f=parseFloat(document.getElementById('custom-f').value)||0;
+  const entry={id:'e'+Date.now(),name,qty:serving,unit:'g',kcal:Math.round(kcal),p:Math.round(p),c:Math.round(c),f:Math.round(f)};
+  getLog(state.currentDay).push(entry);
+  document.getElementById('custom-panel').style.display='none';
+  clearCustomForm();
+  save();renderLog();toast('Added: '+name);
+}
+
+function saveCustomFood(){
+  const name=document.getElementById('custom-name').value.trim();
+  if(!name){toast('Enter a food name');return;}
+  const kcal=parseFloat(document.getElementById('custom-kcal').value)||0;
+  const serving=parseFloat(document.getElementById('custom-serving').value)||100;
+  const p=parseFloat(document.getElementById('custom-p').value)||0;
+  const c=parseFloat(document.getElementById('custom-c').value)||0;
+  const f=parseFloat(document.getElementById('custom-f').value)||0;
+  if(!state.customFoods) state.customFoods=[];
+  state.customFoods.push({id:'cf'+Date.now(),name,sub:'Custom food · per '+serving+'g',kcal,p,c,f,per:serving});
+  save();toast('Saved to your foods: '+name);
+  clearCustomForm();
+  document.getElementById('custom-panel').style.display='none';
+}
+
+function clearCustomForm(){
+  ['custom-name','custom-kcal','custom-serving','custom-p','custom-c','custom-f'].forEach(id=>{document.getElementById(id).value='';});
+}
+
 // ─── SEARCH ───────────────────────────────────────────────
 function toggleSearch(){
   const p=document.getElementById('search-panel');
@@ -524,13 +605,14 @@ async function doSearch(){
   }
 
   const lq=q.toLowerCase();
+  const customMatches=(state.customFoods||[]).filter(f=>f.name.toLowerCase().includes(lq));
   const localMatches=LOCAL_FOODS.filter(f=>f.name.toLowerCase().includes(lq)||f.sub.toLowerCase().includes(lq));
   const recipeMatches=state.recipes.filter(r=>r.name.toLowerCase().includes(lq));
 
-  if(localMatches.length||recipeMatches.length){
+  if(customMatches.length||localMatches.length||recipeMatches.length){
     status.style.display='none';
     const recFoods=recipeMatches.map(r=>({id:'recipe_'+r.id,name:r.name,sub:'Recipe · '+r.servings+' serving'+(r.servings>1?'s':''),kcal:Math.round(r.kcal/r.servings),p:Math.round(r.p/r.servings),c:Math.round(r.c/r.servings),f:Math.round(r.f/r.servings),per:1,unit:'serving'}));
-    list.innerHTML=[...recFoods,...localMatches].map(makeResultItem).join('');
+    list.innerHTML=[...recFoods,...customMatches,...localMatches].map(makeResultItem).join('');
     return;
   }
 
@@ -745,12 +827,29 @@ function renderPresets(){
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────
+function calcMacrosFromPct(){
+  const kcal=parseInt(document.getElementById('g-kcal').value)||0;
+  const pPct=parseInt(document.getElementById('g-p-pct').value)||0;
+  const fPct=parseInt(document.getElementById('g-f-pct').value)||0;
+  const cPct=Math.max(0,100-pPct-fPct);
+  document.getElementById('g-c-pct').value=cPct;
+  const pG=Math.round(kcal*pPct/100/4);
+  const fG=Math.round(kcal*fPct/100/9);
+  const cG=Math.round(kcal*cPct/100/4);
+  document.getElementById('g-p-grams').textContent=pG+'g/day';
+  document.getElementById('g-f-grams').textContent=fG+'g/day';
+  document.getElementById('g-c-grams').textContent=cG+'g/day';
+  const warn=document.getElementById('pct-warning');
+  warn.style.display=(pPct+fPct>100)?'block':'none';
+}
+
 function renderSettings(){
   const G=state.goals;
+  if(!G.pPct&&G.pPct!==0){G.pPct=Math.round(G.p*4/G.kcal*100);G.fPct=Math.round(G.f*9/G.kcal*100);}
   document.getElementById('g-kcal').value=G.kcal;
-  document.getElementById('g-p').value=G.p;
-  document.getElementById('g-c').value=G.c;
-  document.getElementById('g-f').value=G.f;
+  document.getElementById('g-p-pct').value=G.pPct;
+  document.getElementById('g-f-pct').value=G.fPct;
+  calcMacrosFromPct();
   const el=document.getElementById('preset-manage-list');
   el.innerHTML=state.presets.length
     ? state.presets.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid var(--border)"><span style="font-size:13px;font-weight:600">${p.name}<span style="font-weight:400;color:var(--text2);font-size:12px;margin-left:6px">${p.entries.length} items</span></span><button class="btn btn-danger btn-sm" onclick="deletePreset('${p.id}')">Delete</button></div>`).join('')
@@ -758,7 +857,12 @@ function renderSettings(){
 }
 
 function saveGoals(){
-  state.goals={kcal:parseInt(document.getElementById('g-kcal').value)||2400,p:parseInt(document.getElementById('g-p').value)||180,c:parseInt(document.getElementById('g-c').value)||240,f:parseInt(document.getElementById('g-f').value)||80};
+  const kcal=parseInt(document.getElementById('g-kcal').value)||2400;
+  const pPct=parseInt(document.getElementById('g-p-pct').value)||30;
+  const fPct=parseInt(document.getElementById('g-f-pct').value)||30;
+  if(pPct+fPct>100){toast('Protein % + Fat % cannot exceed 100%');return;}
+  const cPct=100-pPct-fPct;
+  state.goals={kcal,p:Math.round(kcal*pPct/100/4),c:Math.round(kcal*cPct/100/4),f:Math.round(kcal*fPct/100/9),pPct,fPct};
   save();renderLog();toast('Goals updated');
 }
 
@@ -811,7 +915,7 @@ function renderCharts(){
 
 // ─── PWA ──────────────────────────────────────────────────
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/Macros/sw.js').catch(()=>{}));
 }
 
 // ─── INIT ─────────────────────────────────────────────────
