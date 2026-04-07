@@ -354,9 +354,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
           <div class="goal-row"><div><div class="goal-label">Calories</div><div class="goal-sub">kcal/day</div></div><input class="goal-input" type="number" id="g-kcal" oninput="calcMacrosFromPct()"/></div>
           <div class="goal-row"><div><div class="goal-label">Protein %</div><div class="goal-sub" id="g-p-grams">0g/day</div></div><input class="goal-input" type="number" id="g-p-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
           <div class="goal-row"><div><div class="goal-label">Fat %</div><div class="goal-sub" id="g-f-grams">0g/day</div></div><input class="goal-input" type="number" id="g-f-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
-          <div class="goal-row"><div><div class="goal-label">Carbs %</div><div class="goal-sub" id="g-c-grams">0g/day</div></div><input class="goal-input" type="number" id="g-c-pct" disabled style="opacity:.6"/></div>
+          <div class="goal-row"><div><div class="goal-label">Carbs %</div><div class="goal-sub" id="g-c-grams">0g/day</div></div><input class="goal-input" type="number" id="g-c-pct" min="0" max="100" oninput="calcMacrosFromPct()"/></div>
         </div>
-        <div id="pct-warning" style="font-size:12px;color:var(--red);margin-top:8px;display:none">Protein % + Fat % must not exceed 100%</div>
+        <div id="pct-warning" style="font-size:12px;color:var(--red);margin-top:8px;display:none">Percentages don't add up to 100%</div>
         <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveGoals()">Save goals</button>
       </div>
 
@@ -424,7 +424,7 @@ const LOCAL_FOODS = [
 ];
 
 let state = {
-  goals: {kcal:2400,p:180,c:240,f:80,pPct:30,fPct:30},
+  goals: {kcal:2400,p:180,c:240,f:80,pPct:30,fPct:30,cPct:40},
   logs: {},
   recipes: [],
   presets: [],
@@ -831,8 +831,7 @@ function calcMacrosFromPct(){
   const kcal=parseInt(document.getElementById('g-kcal').value)||0;
   const pPct=parseInt(document.getElementById('g-p-pct').value)||0;
   const fPct=parseInt(document.getElementById('g-f-pct').value)||0;
-  const cPct=Math.max(0,100-pPct-fPct);
-  document.getElementById('g-c-pct').value=cPct;
+  const cPct=parseInt(document.getElementById('g-c-pct').value)||0;
   const pG=Math.round(kcal*pPct/100/4);
   const fG=Math.round(kcal*fPct/100/9);
   const cG=Math.round(kcal*cPct/100/4);
@@ -840,15 +839,17 @@ function calcMacrosFromPct(){
   document.getElementById('g-f-grams').textContent=fG+'g/day';
   document.getElementById('g-c-grams').textContent=cG+'g/day';
   const warn=document.getElementById('pct-warning');
-  warn.style.display=(pPct+fPct>100)?'block':'none';
+  warn.style.display=(pPct+fPct+cPct!==100)?'block':'none';
 }
 
 function renderSettings(){
   const G=state.goals;
-  if(!G.pPct&&G.pPct!==0){G.pPct=Math.round(G.p*4/G.kcal*100);G.fPct=Math.round(G.f*9/G.kcal*100);}
+  if(!G.pPct&&G.pPct!==0){G.pPct=Math.round(G.p*4/G.kcal*100);G.fPct=Math.round(G.f*9/G.kcal*100);G.cPct=Math.round(G.c*4/G.kcal*100);}
+  if(!G.cPct&&G.cPct!==0) G.cPct=100-G.pPct-G.fPct;
   document.getElementById('g-kcal').value=G.kcal;
   document.getElementById('g-p-pct').value=G.pPct;
   document.getElementById('g-f-pct').value=G.fPct;
+  document.getElementById('g-c-pct').value=G.cPct;
   calcMacrosFromPct();
   const el=document.getElementById('preset-manage-list');
   el.innerHTML=state.presets.length
@@ -860,9 +861,9 @@ function saveGoals(){
   const kcal=parseInt(document.getElementById('g-kcal').value)||2400;
   const pPct=parseInt(document.getElementById('g-p-pct').value)||30;
   const fPct=parseInt(document.getElementById('g-f-pct').value)||30;
-  if(pPct+fPct>100){toast('Protein % + Fat % cannot exceed 100%');return;}
-  const cPct=100-pPct-fPct;
-  state.goals={kcal,p:Math.round(kcal*pPct/100/4),c:Math.round(kcal*cPct/100/4),f:Math.round(kcal*fPct/100/9),pPct,fPct};
+  const cPct=parseInt(document.getElementById('g-c-pct').value)||40;
+  if(pPct+fPct+cPct!==100){toast('Percentages must add up to 100%');return;}
+  state.goals={kcal,p:Math.round(kcal*pPct/100/4),c:Math.round(kcal*cPct/100/4),f:Math.round(kcal*fPct/100/9),pPct,fPct,cPct};
   save();renderLog();toast('Goals updated');
 }
 
